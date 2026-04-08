@@ -52,7 +52,7 @@ st.markdown("""
 }
 
 .main .block-container {
-    padding-top: 1.65rem;
+    padding-top: 2.45rem;
     padding-bottom: 1.2rem;
     max-width: 1160px;
     font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
