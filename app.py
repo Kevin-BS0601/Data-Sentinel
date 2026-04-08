@@ -85,12 +85,16 @@ h1 {
 .ds-title-text {
     font-size: 2.2rem;
     font-weight: 800;
-    line-height: 1.05;
+    line-height: 1.15;
     letter-spacing: -0.02em;
     color: #f3f7ff;
+    margin: 0;
+    padding: 0;
 }
+
 .ds-title-text-inline {
-    margin-top: 1px;
+    margin: 0;
+    padding: 0;
 }
 
 h2 {
@@ -263,6 +267,8 @@ h2 {
 }
 </style>
 """, unsafe_allow_html=True)
+
+st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
 title_icon_col, title_text_col = st.columns([0.8, 24], gap="small")
 with title_icon_col:
