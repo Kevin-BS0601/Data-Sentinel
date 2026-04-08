@@ -52,7 +52,7 @@ st.markdown("""
 }
 
 .main .block-container {
-    padding-top: 1.05rem;
+    padding-top: 1.65rem;
     padding-bottom: 1.2rem;
     max-width: 1160px;
     font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -85,7 +85,7 @@ h1 {
 .ds-title-text {
     font-size: 2.2rem;
     font-weight: 800;
-    line-height: 1.15;
+    line-height: 1.2;
     letter-spacing: -0.02em;
     color: #f3f7ff;
     margin: 0;
@@ -267,8 +267,6 @@ h2 {
 }
 </style>
 """, unsafe_allow_html=True)
-
-st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
 title_icon_col, title_text_col = st.columns([0.8, 24], gap="small")
 with title_icon_col:
