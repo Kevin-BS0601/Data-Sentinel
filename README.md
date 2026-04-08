@@ -35,8 +35,21 @@ Data-Sentinel is a Streamlit-based data quality auditing app for CSV datasets. I
 
 2. Install dependencies:
 
+## How to Run Locally
+
+1. Clone the repository
+
+2. Install dependencies:
+
 ```bash
 pip install -r requirements.txt
+```
+
+3. Run the app:
+
+```bash
+streamlit run app.py
+```
 
 ## Screenshots
 
@@ -47,4 +60,4 @@ pip install -r requirements.txt
 ![Column Breakdown](screenshots/column_breakdown.png)
 
 ### AI Recommendations
-![AI Recommendations](screenshots/ai_recommendations.png)
+![AI Recommendations](screenshots/ai_recommendations.png) 
