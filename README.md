@@ -1,88 +1,132 @@
-# DataSentinel
+# 🔍 DataSentinel
 
-DataSentinel is a Streamlit-based data quality auditing app for CSV datasets. It helps users quickly inspect dataset health, detect common quality issues, and generate actionable cleanup suggestions.
+**Automated data quality auditing for CSV datasets — score health, rank issues, generate fix code.**
 
-**Live Demo:** [Try DataSentinel](https://data-sentinel-vdbjrmxm7jwuauxsdjqgb4.streamlit.app/)
+**[→ Live Demo](https://data-sentinel-vdbjrmxm7jwuauxsdjqgb4.streamlit.app/)** &nbsp;|&nbsp; Python · Streamlit · Pandas · Gemini API
 
-## Overview
+---
 
-Real-world datasets are often messy before any analysis or machine learning work can begin. Missing values, duplicate rows, outliers, invalid email fields, and inconsistent columns can reduce trust in the data and lead to poor downstream decisions.
+## What it does
 
-DataSentinel provides a lightweight audit workflow for CSV files. It profiles the dataset, computes a rule-based health score, highlights high-priority issues, shows column-level diagnostics, and generates AI-assisted recommendations to help users understand what to fix first.
+Most data quality checks are either too heavy (Great Expectations, dbt test suites) or too shallow (`df.info()`). DataSentinel sits in between: upload a CSV, get a scored audit report with ranked issues, column-level diagnostics, and working Pandas fix code — in under 10 seconds.
 
-## Why I Built This
+It is designed for the moment before analysis or model training begins, when you need to know *how bad is this data and what do I fix first* — not a full pipeline contract.
 
-I built DataSentinel to make initial data quality checks faster and easier to understand, especially for users working with raw CSV exports. Instead of manually inspecting each column or writing repeated cleaning scripts from scratch, the app gives a quick overview of dataset health and surfaces the most important problems in one place.
+---
 
-## What It Does
+## Features
 
-- Upload and analyze CSV datasets
-- Compute an overall data health score
-- Detect common quality issues such as:
-  - missing values
-  - duplicate rows
-  - outliers
-  - invalid email values
-  - heavily incomplete columns
-- Rank issues by severity
-- Show per-column diagnostics
-- Generate AI-assisted fix suggestions
-- Export audit results as JSON
-- Validate improvements using before/after comparison
+| Feature | Detail |
+|---|---|
+| Health score (0–100) | Rule-based score with per-penalty breakdown |
+| Issue ranking | Issues sorted by severity — critical before warning |
+| Column diagnostics | Missing %, outliers, invalid emails, data types |
+| AI fix code | Gemini generates executable Pandas snippets per column |
+| Before/after comparison | Upload a cleaned CSV to see the score delta |
+| JSON export | Full audit report with timestamp, downloadable |
 
-## How the Health Score Works
+---
 
-The DataSentinel health score is a rule-based score designed to help prioritize data cleaning work.
+## How the health score works
 
-The score starts at 100 and applies penalties based on dataset issues, including:
+The score starts at 100 and subtracts weighted penalties:
 
-- percentage of missing values across the dataset
-- duplicate rows
-- detected outliers
-- invalid email values
-- columns with high missing-value percentages
+| Signal | Penalty weight | Rationale |
+|---|---|---|
+| Missing values | 1.2× the missing % | Propagate silently into aggregations |
+| Duplicate rows | 2.0× the duplicate % | Inflate every count and distort aggregates |
+| Outliers | 1.5× the outlier % | Bias means; severity depends on analysis type |
+| Invalid emails | 1.2× the invalid % | Silent join failures in CRM/marketing pipelines |
+| Heavily missing columns (≥40%) | −8 pts each | Structural problem, not a fill problem |
 
-This score is not intended to be a universal statistical standard. It is a practical auditing signal that helps users quickly judge overall dataset quality and identify where attention is needed most.
+Score ranges: **80–100** Healthy · **55–79** Needs attention · **0–54** Critical
 
-## Typical Workflow
+This is a practical auditing signal, not a statistical standard. The weights encode a specific opinion about downstream risk — they are documented so you can adjust them for your context.
 
-1. Upload a CSV dataset
-2. Review the overall health score and issue summary
-3. Inspect column-level diagnostics
-4. Review AI-assisted recommendations
-5. Export the audit as JSON or compare before/after cleanup versions
+---
+
+## Architecture
+
+```
+detector.py        — profiles raw DataFrame: missing %, outliers, email validity
+      ↓
+scorer.py          — computes health score, classifies severity, ranks issues
+      ↓
+llm_client.py      — sends profile summary (not raw data) to Gemini, parses structured JSON
+      ↓
+app.py             — Streamlit UI: orchestrates all modules, manages session state
+```
+
+All detection and scoring runs locally. Only column-level statistics (no raw values) are sent to the AI.
+
+---
 
 ## Screenshots
 
-These screenshots show the main audit views, including the overall dashboard, column-level analysis, and AI-assisted recommendations.
-
-### Dashboard
+### Dashboard — health score card and score breakdown
 ![Dashboard](screenshots/dashboard.png)
 
-### Column Breakdown
+### Column breakdown — per-column diagnostics with severity badges
 ![Column Breakdown](screenshots/column_breakdown.png)
 
-### AI Recommendations
+### AI recommendations — fix code and top risk, generated from the profile
 ![AI Recommendations](screenshots/ai_recommendations.png)
 
-## Tech Stack
+---
 
-- Python
-- Streamlit
-- Pandas
+## Tech stack
 
-## Project Structure
+- **Python 3.11**
+- **Streamlit** — UI framework
+- **Pandas + NumPy** — data profiling and outlier detection
+- **Google Gemini 2.5 Flash** — AI fix code generation
+- **python-dotenv** — local API key management
 
-- `app.py` — main Streamlit application
-- `detector.py` — dataset profiling and issue detection
-- `scorer.py` — health scoring and issue classification
-- `llm_client.py` — AI-assisted analysis integration
-- `requirements.txt` — project dependencies
+---
 
-## How to Run Locally
-
-1. Clone the repository:
+## Run locally
 
 ```bash
 git clone https://github.com/Kevin-BS0601/Data-Sentinel.git
 cd Data-Sentinel
+pip install -r requirements.txt
+```
+
+Create a `.env` file in the project root:
+
+```
+GEMINI_API_KEY=your_key_here
+```
+
+Run the app:
+
+```bash
+streamlit run app.py
+```
+
+The app runs without an API key — the AI section will be disabled, but all detection and scoring works offline.
+
+---
+
+## Project structure
+
+```
+app.py             — Streamlit application and UI layout
+detector.py        — DataFrame profiling (missing values, outliers, email validation)
+scorer.py          — Health score calculation and issue classification
+llm_client.py      — Gemini API integration and prompt handling
+requirements.txt   — Pinned dependencies
+screenshots/       — UI screenshots for README
+```
+
+---
+
+## Why I built this
+
+Data cleaning is the most time-consuming part of most ML and analytics projects. The usual workflow is `df.info()`, `df.describe()`, some manual column checks — repeated across every new dataset. I built DataSentinel to compress that into a single scored report with a prioritised fix list, so the first 10 minutes of any data project are faster and more systematic.
+
+The before/after comparison feature came from a specific frustration: after cleaning a dataset it's not always obvious whether your fixes actually improved things or introduced new problems. The score delta makes that concrete.
+
+---
+
+*Built by Kevin · M.Sc. Artificial Intelligence · BTU Cottbus-Senftenberg*
